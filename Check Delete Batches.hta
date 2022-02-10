@@ -1,0 +1,392 @@
+<html>
+<head>
+<title>Check Delete Price Batches, version 2.25</title>
+<HTA:APPLICATION 
+	 APPLICATIONNAME="Check Delete Price Batches, version 2.25"
+	 BORDER="thin"
+	 maximizeButton="no"
+	 minimizeButton="no"
+	 font-family: Verdana, Arial, Helvetica;
+	 font-size: 10px;
+	 font-weight: bold;
+	 background-color: transparent;
+	 background-repeat: no-repeat;
+	 SCROLL="yes"
+	 SINGLEINSTANCE="yes"
+	 selection="no"
+	 showintaskbar="yes"
+	 singleinstance="yes"
+	 sysmenu="yes"
+	 version="2.25"
+	 icon=""
+	 WINDOWSTATE="maximize"
+>
+
+<script language="VBScript">
+
+On Error Resume Next
+
+'''''''''''''''''''''''''''''''''''''''''''''''
+''Initialization of main export.
+'''''''''''''''''''''''''''''''''''''''''''''''
+ 
+Sub Window_onLoad()
+
+	intWidth = 855
+	intHeight = 855
+	Me.ResizeTo intWidth, intHeight
+	Me.MoveTo ((Screen.Width / 4) - (intWidth / 4)),((Screen.Height / 2) - (intHeight / 2))
+
+	On Error Resume Next
+
+	Set objFSO = CreateObject("Scripting.FileSystemObject")				
+	Set objFile = objFSO.OpenTextFile("C:\Program Files\Check Delete Batches\Downloads\HSdeletes")		
+	strContents = objFile.ReadAll		
+	objFile.Close
+
+If strContents <= "" Then
+
+	LogContents_pre.Value = "There is no RBX file to import!  If you feel this is in error please contact Jim.Berkenbaugh@Wholefoods.com"
+
+Else
+
+	LogContents_pre.Value = strContents		
+
+End If
+	
+End Sub
+
+'''''''''''''''''''''''''''
+''Date exclusion.
+'''''''''''''''''''''''''''
+
+Sub Filter()
+
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+''delete existing temp table
+''- if the temp file exists then delete
+''and rebuild it, else simply create it.
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+Set objFSO = CreateObject("Scripting.FileSystemObject")
+If objFSO.FileExists("C:\Program Files\Check Delete Batches\Downloads\Deletes.csv") Then
+		Set objFSO = CreateObject("Scripting.FileSystemObject")
+	objFSO.DeleteFile("C:\Program Files\Check Delete Batches\Downloads\Deletes.csv")
+	objFSO.CreateTextFile("C:\Program Files\Check Delete Batches\Downloads\Deletes.csv")
+Else
+	objFSO.CreateTextFile("C:\Program Files\Check Delete Batches\Downloads\Deletes.csv")
+End If
+
+Const ForReading = 1
+Const ForWriting = 2
+Const ForAppending = 8
+
+Set objFSO = CreateObject("Scripting.FileSystemObject")
+Set objFile = objFSO.OpenTextFile("C:\Program Files\Check Delete Batches\Downloads\HSdeletes", ForReading)
+
+Do Until objFile.AtEndOfStream
+	strLine = objFile.ReadLine
+	If InStr(strLine, "00/00/00") = 0 Then	
+		strNewConAppApp = strNewConAppApp & strLine & vbCrLf
+	End If
+Loop
+
+Set objFile = objFSO.OpenTextFile("C:\Program Files\Check Delete Batches\Downloads\Deletes.csv", ForWriting)
+objFile.Write strNewContents
+
+objFile.Close
+
+'''''''''''''''''''''''''''''''''''''''''''''''
+''Wine exception filter.
+'''''''''''''''''''''''''''''''''''''''''''''''
+
+Set objFSO = CreateObject("Scripting.FileSystemObject")
+Set objFile = objFSO.OpenTextFile("C:\Program Files\Check Delete Batches\Downloads\HSdeletes", ForReading)
+
+Do Until objFile.AtEndOfStream
+	strLine = objFile.ReadLine
+	If InStr(strLine, ",0402,") <> 0 Then
+		strNewConAppApp = strNewConAppApp & strLine & vbCrLf
+	End If
+Loop
+
+Set objFile = objFSO.OpenTextFile("C:\Program Files\Check Delete Batches\Downloads\Deletes.csv", ForAppending)
+objFile.Write strNewConApp
+
+objFile.Close
+
+'''''''''''''''''''''''''''''''''''''''''''''''
+''ISS exception filter.
+'''''''''''''''''''''''''''''''''''''''''''''''
+
+Set objFSO = CreateObject("Scripting.FileSystemObject")
+Set objFile = objFSO.OpenTextFile("C:\Program Files\Check Delete Batches\Downloads\HSdeletes", ForReading)
+
+Do Until objFile.AtEndOfStream
+	strLine = objFile.ReadLine
+	If InStr(strLine, "ISS     ") <> 0 Then
+		strNewConAppApp = strNewConAppApp & strLine & vbCrLf
+	End If
+Loop
+
+Set objFile = objFSO.OpenTextFile("C:\Program Files\Check Delete Batches\Downloads\Deletes.csv", ForAppending)
+objFile.Write strNewConAppApp
+
+objFile.Close
+
+'''''''''''''''''''''''''''''''''''''''''''''''
+''Conditional addition to window.
+'''''''''''''''''''''''''''''''''''''''''''''''
+
+IF strNewContents & strNewConApp & strNewConAppApp > "" Then
+
+	LogContents_post.Value = Replace(strNewContents & strNewConApp & strNewConAppApp, ",", vbTab)
+
+Else
+
+	LogContents_post.Value = "There are no movers, 402 or ISS items to report."
+
+End If
+
+End Sub
+
+Sub Department_Selection()
+
+'''''''''''''''''''''''''''''''''''''''''''''''
+''Initialize the DataArea
+'''''''''''''''''''''''''''''''''''''''''''''''	  
+DataArea.InnerHTML = ""
+
+StrDate = Replace(Replace(Now(),"/","-"),":",".")
+strDept = "."
+
+	If DeptOption(0).Checked Then
+		strDept = DeptOption(0).Value
+	End If
+	If DeptOption(1).Checked Then
+		strDept = DeptOption(1).Value
+	End If
+	If DeptOption(2).Checked Then
+		strDept = DeptOption(2).Value
+	End If
+	If DeptOption(3).Checked Then
+		strDept = DeptOption(3).Value
+	End If
+	If DeptOption(4).Checked Then
+		strDept = DeptOption(4).Value
+	End If
+	If DeptOption(5).Checked Then
+		strDept = DeptOption(5).Value
+	End If
+	If DeptOption(6).Checked Then
+		strDept = DeptOption(6).Value
+	End If
+	If DeptOption(7).Checked Then
+		strDept = DeptOption(7).Value
+	End If
+	If DeptOption(8).Checked Then
+		strDept = DeptOption(8).Value
+	End If
+	If DeptOption(9).Checked Then
+		strDept = DeptOption(9).Value
+	End If
+	If DeptOption(10).Checked Then
+		strDept = DeptOption(10).Value
+	End If
+	If DeptOption(11).Checked Then
+		strDept = DeptOption(11).Value
+	End If
+	If DeptOption(12).Checked Then
+		strDept = DeptOption(12).Value
+	End If
+	If DeptOption(13).Checked Then
+		strDept = DeptOption(13).Value
+	End If
+	If DeptOption(14).Checked Then
+		strDept = DeptOption(14).Value
+	End If
+	If DeptOption(15).Checked Then
+		strDept = DeptOption(15).Value
+	End If
+	If DeptOption(16).Checked Then
+		strDept = DeptOption(16).Value
+	End If
+	If DeptOption(17).Checked Then
+		strDept = DeptOption(17).Value
+	End If
+	If DeptOption(18).Checked Then
+		strDept = DeptOption(18).Value
+	End If
+	If DeptOption(19).Checked Then
+		strDept = DeptOption(19).Value
+	End If
+	If DeptOption(20).Checked Then
+		strDept = DeptOption(20).Value
+	End If
+	If DeptOption(21).Checked Then
+		strDept = DeptOption(21).Value
+	End If
+	If DeptOption(22).Checked Then
+		strDept = DeptOption(22).Value
+	End If
+	
+	
+Set objFSO = CreateObject("Scripting.FileSystemObject")
+If objFSO.FileExists("C:\Program Files\Check Delete Batches\Archive\" & strDept & "-DELETES-" & StrDate & ".csv") Then
+	Set objFSO = CreateObject("Scripting.FileSystemObject")
+	objFSO.DeleteFile("C:\Program Files\Check Delete Batches\Archive\" & strDept & "-DELETES-" & StrDate & ".csv")
+	objFSO.CreateTextFile("C:\Program Files\Check Delete Batches\Archive\" & strDept & "-DELETES-" & StrDate & ".csv")
+Else
+	objFSO.CreateTextFile("C:\Program Files\Check Delete Batches\Archive\" & strDept & "-DELETES-" & StrDate & ".csv")
+End If
+
+	Set objFile = objFSO.OpenTextFile("C:\Program Files\Check Delete Batches\Archive\" & strDept & "-DELETES-" & StrDate & ".csv", ForWriting)
+	strDeptContents = strDeptContents & strLine & vbCrLf
+
+'On Error Resume Next
+
+Const ForReading = 1
+Const ForWriting = 2
+
+Set objFile = objFSO.OpenTextFile("C:\Program Files\Check Delete Batches\Downloads\Deletes.csv", ForReading)
+
+Do Until objFile.AtEndOfStream
+	strLine = objFile.ReadLine
+	If InStr(strLine, strDept) <> 0 Then
+		strDeptContents = strDeptContents & strLine & vbCrLf
+	End If
+Loop
+
+objFile.Close
+
+Set objFile = objFSO.OpenTextFile("C:\Program Files\Check Delete Batches\Archive\" & strDept & "-DELETES-" & StrDate & ".csv", ForWriting)
+objFile.Write strDeptContents
+
+objFile.Close
+
+''''''''''''''''''''''''''''''''''''
+''Send department email of deletes.
+''''''''''''''''''''''''''''''''''''
+
+Dim fso, f
+Set fso = CreateObject("Scripting.FileSystemObject")
+
+'Open the file for reading
+Set f = fso.OpenTextFile("C:\Program Files\Check Delete Batches\Archive\" & strDept & "-DELETES-" & StrDate & ".csv", ForReading)
+'The ReadAll method reads the entire file into the variable BodyText
+BodyText = f.ReadAll
+'Close the file
+f.Close
+Set f = Nothing
+Set fso = Nothing
+
+Set OutApp = CreateObject("Outlook.Application")
+'	OutApp.Session.Logon
+	Set OutMail = OutApp.CreateItem(0)
+
+		With OutMail
+			.To = ""
+			.CC = ""
+			.BCC = ""
+			.Subject = "RBX DELETE ALERT!  These are the POS delete(s) for department " & mid(strDept, 3, 3)
+			.Body = "The following have been sent down as deletes from the regional office and have been or are due (within the next day) to be removed from our system." & VbCrLf & "The highlighted one(s) have recent movements so please let me know if these need further investigating.  Otherwise this is just an FYI." & VbCrLf & VbCrLf & ",IDENTIFIER, DEPARTMENT, DESCRIPTION, BATCH NUMBER, MOVEMENT, LAST SOLD DATE, UNITS/CASE, COST, UNIT SIZE, PACKAGE SIZE, UNIT SIZE DESC, WHSE NUMBER, VENDOR #, PRICE, PRICE TYPE, PRC CHANGE DATE, APPLY DATE" & VbCrLf & BodyText & VbCrLf & "Please contact your SSI with any questions." & VbCrLf & "Thank you."
+			.Display
+		End With
+
+
+	Set OutMail = Nothing
+	Set OutApp = Nothing
+
+''''''''''''''''''''''''''''''''''''
+''Echo Archive results to hta.
+''''''''''''''''''''''''''''''''''''
+
+DataArea.InnerHTML = "Department " & mid(strDept, 3, 3) & " on " & strDate & " has a .csv of filtered deletes archived."
+
+End Sub
+
+
+</script>
+</head>
+
+<body style="background-color:lavenderblush" onkeypress='vbs:Default_Buttons'>
+
+<table>		
+<tr>			
+<td valign="top">			   
+
+</td>			
+
+<td valign="top">
+
+<h6><center><FONT color=#000000>-ALL RBX DELETE PRICE RECORDS-<br>
+<i>~the contents should be transfered to cull the usable records~</i></FONT></center>
+<center>
+<font color=#FF0000>IDENTIFIER | DEPARTMENT | DESCRIPTION | BATCH NUMBER | MOVEMENT | LAST SOLD DATE</font>				
+</center>
+<textarea name="LogContents_pre" rows="8" cols="75" readonly wrap=""></textarea><br>
+<CENTER>
+	<input type="button" name="cmdEncode4" value="Remove Non-Movers, Except for Wine and In-Store Specials" class="Submit" onClick="Filter">
+</CENTER>
+
+<h6><center><FONT color=#000000>-PERTINENT DELETE PRICE RECORDS-<br>
+<i>~filtered from the complete list of RBX Delete Price Records~</i></FONT></center>
+
+<center>
+<font color=#FF0000>IDENTIFIER | DEPARTMENT | DESCRIPTION | BATCH NUMBER | MOVEMENT | LAST SOLD DATE</font>				
+</center>				
+<textarea name="LogContents_post" rows="8" cols="75" readonly wrap="off">Click the above button to remove non-movers, except 402 and ISS items.</textarea>
+
+<b><span id = "DataArea"></span></b>
+
+<div style="text-align: center;">
+
+<h4>Send/Export Filtered Results</h4>
+
+<fieldset>
+<legend>Department Records to Email/Archive</legend>
+<table border="0" cellpadding="3" cellspacing="1">
+  <tr><td><center>
+<input type="radio" name="DeptOption" value=",0101,">101
+<input type="radio" name="DeptOption" value=",0102,">102
+<input type="radio" name="DeptOption" value=",0105,">105
+<input type="radio" name="DeptOption" value=",0106,">106
+<input type="radio" name="DeptOption" value=",0201,">201
+<input type="radio" name="DeptOption" value=",0202,">202
+<input type="radio" name="DeptOption" value=",0204,">204
+<input type="radio" name="DeptOption" value=",0206,">206
+<input type="radio" name="DeptOption" value=",0207,">207
+<input type="radio" name="DeptOption" value=",0301,">301<br>
+<input type="radio" name="DeptOption" value=",0302,">302
+<input type="radio" name="DeptOption" value=",0401,">401
+<input type="radio" name="DeptOption" value=",0402,">402
+<input type="radio" name="DeptOption" value=",0403,">403
+<input type="radio" name="DeptOption" value=",0404,">404
+<input type="radio" name="DeptOption" value=",0501,">501
+<input type="radio" name="DeptOption" value=",0502,">502
+<input type="radio" name="DeptOption" value=",0601,">601<br>
+<input type="radio" name="DeptOption" value=",0705,">705
+<input type="radio" name="DeptOption" value=",0801,">801
+<input type="radio" name="DeptOption" value=",0814,">814
+<input type="radio" name="DeptOption" value=",0815,">815
+<input type="radio" name="DeptOption" value=",0899,">899
+</center><tr></td>
+</table>
+
+</fieldset>
+
+<p>
+<input type="Submit" class="btn" id="Run VBScript" value="Email and Archive Department Deletes" onclick="Department_Selection">
+</p>
+
+<p>
+<a href="file:C:\Program Files\Check Delete Batches\Downloads\Deletes.csv">View all filtered deletes!</a>
+</p>
+
+<input type="button" name="cmdQuit" value="Exit" class="btna" onClick="window.close">
+
+</div>
+
+</body>
+
+</html>
